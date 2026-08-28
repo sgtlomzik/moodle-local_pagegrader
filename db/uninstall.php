@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Remove the gradebook columns owned by this plugin.
  *
@@ -40,9 +38,14 @@ function xmldb_local_pagegrader_uninstall() {
 
     foreach ($items as $item) {
         grade_update(
-            'local_pagegrader', $item->courseid,
-            'local', 'pagegrader', $item->iteminstance,
-            0, null, ['deleted' => 1]
+            'local_pagegrader',
+            $item->courseid,
+            'local',
+            'pagegrader',
+            $item->iteminstance,
+            0,
+            null,
+            ['deleted' => 1]
         );
     }
 

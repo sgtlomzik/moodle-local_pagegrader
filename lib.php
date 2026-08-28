@@ -22,8 +22,6 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Default number of points awarded for viewing a page.
  */
@@ -44,22 +42,34 @@ function local_pagegrader_coursemodule_standard_elements($formwrapper, $mform) {
         return;
     }
 
-    $mform->addElement('header', 'local_pagegrader_header',
-        get_string('settings_header', 'local_pagegrader'));
+    $mform->addElement(
+        'header',
+        'local_pagegrader_header',
+        get_string('settings_header', 'local_pagegrader')
+    );
 
-    $mform->addElement('advcheckbox', 'local_pagegrader_enable',
-        get_string('enable_grading', 'local_pagegrader'));
+    $mform->addElement(
+        'advcheckbox',
+        'local_pagegrader_enable',
+        get_string('enable_grading', 'local_pagegrader')
+    );
     $mform->setType('local_pagegrader_enable', PARAM_INT);
     $mform->addHelpButton('local_pagegrader_enable', 'enable_grading', 'local_pagegrader');
 
-    $mform->addElement('text', 'local_pagegrader_maxgrade',
-        get_string('max_grade', 'local_pagegrader'), ['size' => '5']);
+    $mform->addElement(
+        'text',
+        'local_pagegrader_maxgrade',
+        get_string('max_grade', 'local_pagegrader'),
+        ['size' => '5']
+    );
     $mform->setType('local_pagegrader_maxgrade', PARAM_FLOAT);
     $mform->hideIf('local_pagegrader_maxgrade', 'local_pagegrader_enable', 'notchecked');
 
     if (!empty($current->coursemodule)) {
-        $record = $DB->get_record('local_pagegrader',
-            ['coursemoduleid' => $current->coursemodule]);
+        $record = $DB->get_record(
+            'local_pagegrader',
+            ['coursemoduleid' => $current->coursemodule]
+        );
         if ($record) {
             $mform->setDefault('local_pagegrader_enable', $record->enablegrading);
             $mform->setDefault('local_pagegrader_maxgrade', $record->maxgrade);
@@ -258,8 +268,10 @@ function local_pagegrader_event_page_viewed($event) {
         // The settings row exists but the column does not, which normally means the
         // page was restored without its gradebook item. Re-saving the page settings
         // recreates it.
-        debugging("local_pagegrader: no grade item for course module {$cmid}; re-save the page settings.",
-            DEBUG_DEVELOPER);
+        debugging(
+            "local_pagegrader: no grade item for course module {$cmid}; re-save the page settings.",
+            DEBUG_DEVELOPER
+        );
         return;
     }
 

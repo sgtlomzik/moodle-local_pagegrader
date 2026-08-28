@@ -30,7 +30,6 @@ require_once($CFG->libdir . '/gradelib.php');
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class lib_test extends \advanced_testcase {
-
     /**
      * Helper: create course, page module and enrolled student.
      *
