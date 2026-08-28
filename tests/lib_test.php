@@ -28,6 +28,10 @@ require_once($CFG->libdir . '/gradelib.php');
  * @package   local_pagegrader
  * @copyright 2026 SgtLomzik <lomzike@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers    ::local_pagegrader_coursemodule_validation
+ * @covers    ::local_pagegrader_coursemodule_edit_post_actions
+ * @covers    ::local_pagegrader_sync_grades
+ * @covers    ::local_pagegrader_event_page_viewed
  */
 final class lib_test extends \advanced_testcase {
     /**
