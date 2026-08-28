@@ -53,6 +53,9 @@ final class lib_test extends \advanced_testcase {
         return [$course, $page, $student];
     }
 
+    /**
+     * Validation rejects non positive grade when enabled.
+     */
     public function test_validation_rejects_non_positive_grade_when_enabled(): void {
         $this->resetAfterTest();
 
@@ -64,6 +67,9 @@ final class lib_test extends \advanced_testcase {
         $this->assertArrayHasKey('local_pagegrader_maxgrade', $errors);
     }
 
+    /**
+     * Validation accepts non array payload.
+     */
     public function test_validation_accepts_non_array_payload(): void {
         $this->resetAfterTest();
 
@@ -71,6 +77,9 @@ final class lib_test extends \advanced_testcase {
         $this->assertSame([], $errors);
     }
 
+    /**
+     * Edit post actions creates and deletes grade item.
+     */
     public function test_edit_post_actions_creates_and_deletes_grade_item(): void {
         global $DB;
 
@@ -113,6 +122,9 @@ final class lib_test extends \advanced_testcase {
         $this->assertFalse($deleteditem);
     }
 
+    /**
+     * View event awards grade to student.
+     */
     public function test_view_event_awards_grade_to_student(): void {
         $this->resetAfterTest();
         [$course, $page, $student] = $this->create_page_fixture();
@@ -146,6 +158,9 @@ final class lib_test extends \advanced_testcase {
         $this->assertEquals(9.0, (float)$grade->finalgrade);
     }
 
+    /**
+     * Changing maxgrade syncs existing finalgrade.
+     */
     public function test_changing_maxgrade_syncs_existing_finalgrade(): void {
         $this->resetAfterTest();
         [$course, $page, $student] = $this->create_page_fixture();
@@ -186,6 +201,9 @@ final class lib_test extends \advanced_testcase {
         $this->assertEquals(5.0, (float)$grade->finalgrade);
     }
 
+    /**
+     * Repeated view does not raise grade above max.
+     */
     public function test_repeated_view_does_not_raise_grade_above_max(): void {
         $this->resetAfterTest();
         [$course, $page, $student] = $this->create_page_fixture();
@@ -218,6 +236,9 @@ final class lib_test extends \advanced_testcase {
         $this->assertEquals(4.0, (float)$grade->finalgrade);
     }
 
+    /**
+     * Edit post actions ignores non page module.
+     */
     public function test_edit_post_actions_ignores_non_page_module(): void {
         global $DB;
 
@@ -244,6 +265,9 @@ final class lib_test extends \advanced_testcase {
         }
     }
 
+    /**
+     * View event does not grade when disabled.
+     */
     public function test_view_event_does_not_grade_when_disabled(): void {
         $this->resetAfterTest();
         [$course, $page, $student] = $this->create_page_fixture();
@@ -273,6 +297,9 @@ final class lib_test extends \advanced_testcase {
         $this->assertFalse($item);
     }
 
+    /**
+     * View event does not grade editing teacher.
+     */
     public function test_view_event_does_not_grade_editing_teacher(): void {
         global $DB;
 
@@ -311,6 +338,9 @@ final class lib_test extends \advanced_testcase {
         $this->assertFalse($grade);
     }
 
+    /**
+     * View event skips when grade item missing.
+     */
     public function test_view_event_skips_when_grade_item_missing(): void {
         global $DB;
 
