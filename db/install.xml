@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="local/pagegrader/db" VERSION="20260326" COMMENT="XMLDB file for local_pagegrader plugin"
+<XMLDB PATH="local/pagegrader/db" VERSION="20260828" COMMENT="XMLDB file for local_pagegrader plugin"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
