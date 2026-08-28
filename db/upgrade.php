@@ -15,35 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy Subsystem implementation for local_pagegrader.
+ * Upgrade steps for local_pagegrader.
  *
  * @package    local_pagegrader
  * @copyright  2026 SgtLomzik <lomzike@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace local_pagegrader\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Privacy provider.
+ * Upgrade the local_pagegrader plugin.
  *
- * The plugin's own table holds per-activity configuration only. The grades it
- * awards are stored and exported by the core gradebook subsystem.
- *
- * @package    local_pagegrader
- * @copyright  2026 SgtLomzik <lomzike@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @param int $oldversion The version we are upgrading from.
+ * @return bool Always true.
  */
-class provider implements \core_privacy\local\metadata\null_provider {
+function xmldb_local_pagegrader_upgrade($oldversion) {
+    // No database changes have been needed so far. New steps go here, each
+    // followed by its own upgrade_plugin_savepoint() call.
 
-    /**
-     * Explain why this plugin stores no personal data.
-     *
-     * @return string The name of the language string describing the reason.
-     */
-    public static function get_reason(): string {
-        return 'privacy:metadata';
-    }
+    return true;
 }

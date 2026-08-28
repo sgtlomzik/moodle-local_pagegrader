@@ -26,7 +26,7 @@ require_once($CFG->libdir . '/gradelib.php');
  * Unit tests for local_pagegrader callbacks in lib.php.
  *
  * @package   local_pagegrader
- * @copyright 2026
+ * @copyright 2026 SgtLomzik <lomzike@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 final class lib_test extends \advanced_testcase {
@@ -347,6 +347,7 @@ final class lib_test extends \advanced_testcase {
             'courseid' => $course->id,
         ]);
         \local_pagegrader_event_page_viewed($event);
+        $this->assertDebuggingCalled();
 
         $item = \grade_item::fetch([
             'itemtype' => 'local',
