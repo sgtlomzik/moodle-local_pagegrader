@@ -20,6 +20,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/local/pagegrader/lib.php');
+require_once($CFG->dirroot . '/course/moodleform_mod.php');
 require_once($CFG->libdir . '/gradelib.php');
 
 /**
@@ -28,6 +29,7 @@ require_once($CFG->libdir . '/gradelib.php');
  * @package   local_pagegrader
  * @copyright 2026 SgtLomzik <lomzike@gmail.com>
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @covers    ::local_pagegrader_coursemodule_standard_elements
  * @covers    ::local_pagegrader_coursemodule_validation
  * @covers    ::local_pagegrader_coursemodule_edit_post_actions
  * @covers    ::local_pagegrader_sync_grades
@@ -54,6 +56,19 @@ final class lib_test extends \advanced_testcase {
         $generator->enrol_user($student->id, $course->id, $studentroleid);
 
         return [$course, $page, $student];
+    }
+
+    /**
+     * Build a stand-in for the activity settings form the callback is handed.
+     *
+     * @param \stdClass $current The module data the form is editing.
+     * @return \moodleform_mod
+     */
+    private function make_form_wrapper(\stdClass $current): \moodleform_mod {
+        $wrapper = $this->createStub(\moodleform_mod::class);
+        $wrapper->method('get_current')->willReturn($current);
+
+        return $wrapper;
     }
 
     /**
@@ -389,5 +404,215 @@ final class lib_test extends \advanced_testcase {
             'courseid' => $course->id,
         ]);
         $this->assertFalse($item);
+    }
+
+    /**
+     * Validation accepts a positive grade when enabled.
+     */
+    public function test_validation_accepts_a_positive_grade_when_enabled(): void {
+        $this->resetAfterTest();
+
+        $this->assertSame([], \local_pagegrader_coursemodule_validation([
+            'local_pagegrader_enable' => 1,
+            'local_pagegrader_maxgrade' => 0.5,
+        ], []));
+    }
+
+    /**
+     * Validation ignores the grade while grading is switched off.
+     *
+     * @param array $data Submitted form data.
+     * @dataProvider ignored_grade_provider
+     */
+    public function test_validation_ignores_the_grade_while_disabled(array $data): void {
+        $this->resetAfterTest();
+
+        $this->assertSame([], \local_pagegrader_coursemodule_validation($data, []));
+    }
+
+    /**
+     * Data provider for {@see test_validation_ignores_the_grade_while_disabled()}.
+     *
+     * @return array[] Submissions where the maximum grade does not matter.
+     */
+    public static function ignored_grade_provider(): array {
+        return [
+            'unchecked with a zero grade' => [[
+                'local_pagegrader_enable' => 0,
+                'local_pagegrader_maxgrade' => 0,
+            ]],
+            'unchecked with a negative grade' => [[
+                'local_pagegrader_enable' => 0,
+                'local_pagegrader_maxgrade' => -3,
+            ]],
+            'no elements submitted' => [[]],
+        ];
+    }
+
+    /**
+     * Validation rejects a negative grade when enabled.
+     */
+    public function test_validation_rejects_a_negative_grade_when_enabled(): void {
+        $this->resetAfterTest();
+
+        $errors = \local_pagegrader_coursemodule_validation([
+            'local_pagegrader_enable' => 1,
+            'local_pagegrader_maxgrade' => -1,
+        ], []);
+
+        $this->assertArrayHasKey('local_pagegrader_maxgrade', $errors);
+        $this->assertSame(get_string('error_maxgrade', 'local_pagegrader'), $errors['local_pagegrader_maxgrade']);
+    }
+
+    /**
+     * Standard elements add the grading settings to a page form.
+     */
+    public function test_standard_elements_are_added_to_a_page_form(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        [, $page] = $this->create_page_fixture();
+
+        // Creating the module already ran the edit callback, so clear the row to
+        // get the state of a page that has never been through these settings.
+        $DB->delete_records('local_pagegrader', ['coursemoduleid' => $page->cmid]);
+
+        $mform = new \MoodleQuickForm('modedit', 'post', '');
+        \local_pagegrader_coursemodule_standard_elements(
+            $this->make_form_wrapper((object)['modulename' => 'page', 'coursemodule' => $page->cmid]),
+            $mform
+        );
+
+        $this->assertTrue($mform->elementExists('local_pagegrader_header'));
+        $this->assertTrue($mform->elementExists('local_pagegrader_enable'));
+        $this->assertTrue($mform->elementExists('local_pagegrader_maxgrade'));
+
+        // With no settings row yet, the documented default is offered.
+        $this->assertEquals(
+            LOCAL_PAGEGRADER_DEFAULT_MAXGRADE,
+            $mform->getElementValue('local_pagegrader_maxgrade')
+        );
+    }
+
+    /**
+     * Standard elements leave other kinds of activity untouched.
+     */
+    public function test_standard_elements_are_not_added_to_other_modules(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $mform = new \MoodleQuickForm('modedit', 'post', '');
+        \local_pagegrader_coursemodule_standard_elements(
+            $this->make_form_wrapper((object)['modulename' => 'label', 'coursemodule' => 0]),
+            $mform
+        );
+
+        $this->assertFalse($mform->elementExists('local_pagegrader_header'));
+        $this->assertFalse($mform->elementExists('local_pagegrader_enable'));
+    }
+
+    /**
+     * Standard elements show the settings already stored for a page.
+     */
+    public function test_standard_elements_show_the_stored_settings(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        [$course, $page] = $this->create_page_fixture();
+
+        \local_pagegrader_coursemodule_edit_post_actions((object)[
+            'modulename' => 'page',
+            'coursemodule' => $page->cmid,
+            'local_pagegrader_enable' => 1,
+            'local_pagegrader_maxgrade' => 3.5,
+            'name' => $page->name,
+        ], $course);
+
+        $mform = new \MoodleQuickForm('modedit', 'post', '');
+        \local_pagegrader_coursemodule_standard_elements(
+            $this->make_form_wrapper((object)['modulename' => 'page', 'coursemodule' => $page->cmid]),
+            $mform
+        );
+
+        $this->assertEquals(1, $mform->getElementValue('local_pagegrader_enable'));
+        $this->assertEquals(3.5, (float)$mform->getElementValue('local_pagegrader_maxgrade'));
+    }
+
+    /**
+     * Edit post actions accept a page that has never been graded.
+     */
+    public function test_edit_post_actions_stores_a_disabled_page(): void {
+        global $DB;
+
+        $this->resetAfterTest();
+        [$course, $page] = $this->create_page_fixture();
+
+        \local_pagegrader_coursemodule_edit_post_actions((object)[
+            'modulename' => 'page',
+            'coursemodule' => $page->cmid,
+            'local_pagegrader_enable' => 0,
+            'local_pagegrader_maxgrade' => 10,
+            'name' => $page->name,
+        ], $course);
+
+        $record = $DB->get_record('local_pagegrader', ['coursemoduleid' => $page->cmid]);
+        $this->assertNotFalse($record);
+        $this->assertEquals(0, (int)$record->enablegrading);
+
+        // Nothing is added to the gradebook for a page that is not graded.
+        $this->assertFalse(\grade_item::fetch([
+            'itemtype' => 'local',
+            'itemmodule' => 'pagegrader',
+            'iteminstance' => $page->cmid,
+            'courseid' => $course->id,
+        ]));
+    }
+
+    /**
+     * Sync grades does nothing when the page has no gradebook column.
+     */
+    public function test_sync_grades_without_a_grade_item(): void {
+        $this->resetAfterTest();
+        [$course, $page] = $this->create_page_fixture();
+
+        // Must not raise anything: the page simply has no column to re-scale.
+        \local_pagegrader_sync_grades($course->id, $page->cmid, 5.0);
+
+        $this->assertFalse(\grade_item::fetch([
+            'itemtype' => 'local',
+            'itemmodule' => 'pagegrader',
+            'iteminstance' => $page->cmid,
+            'courseid' => $course->id,
+        ]));
+    }
+
+    /**
+     * Renaming the page renames the gradebook column.
+     */
+    public function test_edit_post_actions_renames_the_grade_item(): void {
+        $this->resetAfterTest();
+        [$course, $page] = $this->create_page_fixture();
+
+        $data = (object)[
+            'modulename' => 'page',
+            'coursemodule' => $page->cmid,
+            'local_pagegrader_enable' => 1,
+            'local_pagegrader_maxgrade' => 10,
+            'name' => $page->name,
+        ];
+        \local_pagegrader_coursemodule_edit_post_actions($data, $course);
+
+        $data->name = 'Renamed page';
+        \local_pagegrader_coursemodule_edit_post_actions($data, $course);
+
+        $item = \grade_item::fetch([
+            'itemtype' => 'local',
+            'itemmodule' => 'pagegrader',
+            'iteminstance' => $page->cmid,
+            'courseid' => $course->id,
+        ]);
+        $this->assertSame('Renamed page', $item->itemname);
     }
 }

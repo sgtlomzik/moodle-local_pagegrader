@@ -2,6 +2,24 @@
 
 All notable changes to this plugin are documented in this file.
 
+## [1.4.1] - 2026-08-31
+
+### Added
+- Privacy provider tests confirming the plugin is a compliant null provider and
+  that its own table carries configuration only, with no user column.
+- Observer tests that go through the real event system rather than calling the
+  callbacks directly, so a broken `db/events.php` is caught: both observers are
+  registered, a page view awards the grade, deleting the page removes its
+  settings row and gradebook column, and neither the guest account nor a user
+  without `mod/page:view` is graded.
+- Tests for `xmldb_local_pagegrader_uninstall`, covering the removal of every
+  gradebook column the plugin owns while leaving other components' columns
+  alone.
+- Tests for `local_pagegrader_coursemodule_standard_elements`, the default and
+  stored maximum grade, the validation of the maximum grade, storing a page with
+  grading switched off, re-scaling a page that has no gradebook column, and
+  renaming the gradebook column with the page.
+
 ## [1.4.0] - 2026-08-28
 
 ### Added
